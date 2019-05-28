@@ -19,13 +19,15 @@ class Board {
                   column: c,
                   value: 0,
                   isNew: false,
-                  canMarge: false,
+                  canMerge: false,
                 ),
           ),
     );
 
+    print(_boardTiles);
+
     score = 0;
-    resetCanMarge();
+    resetCanMerge();
     randomEmptyTile();
     randomEmptyTile();
   }
@@ -37,11 +39,11 @@ class Board {
 
     for (int r = 0; r < row; ++r) {
       for (int c = 0; c < column; ++c) {
-        margeLeft(r, c);
+        mergeLeft(r, c);
       }
     }
     randomEmptyTile();
-    resetCanMarge();
+    resetCanMerge();
   }
 
   void moveRight() {
@@ -51,11 +53,11 @@ class Board {
 
     for (int r = 0; r < row; ++r) {
       for (int c = column - 2; c >= 0; --c) {
-        margeRight(r, c);
+        mergeRight(r, c);
       }
     }
     randomEmptyTile();
-    resetCanMarge();
+    resetCanMerge();
   }
 
   void moveUp() {
@@ -65,11 +67,11 @@ class Board {
 
     for (int r = 0; r < row; ++r) {
       for (int c = 0; c < column; ++c) {
-        margeUp(r, c);
+        mergeUp(r, c);
       }
     }
     randomEmptyTile();
-    resetCanMarge();
+    resetCanMerge();
   }
 
   void moveDown() {
@@ -79,17 +81,17 @@ class Board {
 
     for (int r = row - 2; r >= 0; --r) {
       for (int c = 0; c < column; ++c) {
-        margeDown(r, c);
+        mergeDown(r, c);
       }
     }
     randomEmptyTile();
-    resetCanMarge();
+    resetCanMerge();
   }
 
   bool canMoveLeft() {
     for (int r = 0; r < row; ++r) {
       for (int c = 1; c < column; ++c) {
-        if (canMarge(_boardTiles[r][c], _boardTiles[r][c - 1])) {
+        if (canMerge(_boardTiles[r][c], _boardTiles[r][c - 1])) {
           return true;
         }
       }
@@ -99,8 +101,8 @@ class Board {
 
   bool canMoveRight() {
     for (int r = 0; r < row; ++r) {
-      for (int c = column - 2; c > 0; --c) {
-        if (canMarge(_boardTiles[r][c], _boardTiles[r][c + 1])) {
+      for (int c = column - 2; c >= 0; --c) {
+        if (canMerge(_boardTiles[r][c], _boardTiles[r][c + 1])) {
           return true;
         }
       }
@@ -111,7 +113,7 @@ class Board {
   bool canMoveUp() {
     for (int r = 1; r < row; ++r) {
       for (int c = 0; c < column; ++c) {
-        if (canMarge(_boardTiles[r][c], _boardTiles[r - 1][c])) {
+        if (canMerge(_boardTiles[r][c], _boardTiles[r - 1][c])) {
           return true;
         }
       }
@@ -122,7 +124,7 @@ class Board {
   bool canMoveDown() {
     for (int r = row - 2; r >= 0; --r) {
       for (int c = 0; c < column; ++c) {
-        if (canMarge(_boardTiles[r][c], _boardTiles[r + 1][c])) {
+        if (canMerge(_boardTiles[r][c], _boardTiles[r + 1][c])) {
           return true;
         }
       }
@@ -130,56 +132,62 @@ class Board {
     return false;
   }
 
-  void margeLeft(int row, int col) {
+  void mergeLeft(int row, int col) {
     while (col > 0) {
-      marge(_boardTiles[row][col], _boardTiles[row][col - 1]);
+      merge(_boardTiles[row][col], _boardTiles[row][col - 1]);
       col--;
     }
   }
 
-  void margeRight(int row, int col) {
+  void mergeRight(int row, int col) {
     while (col < column - 1) {
-      marge(_boardTiles[row][col], _boardTiles[row][col + 1]);
+      merge(_boardTiles[row][col], _boardTiles[row][col + 1]);
       col++;
     }
   }
 
-  void margeUp(int row, int col) {
-    while (row > 0) {
-      marge(_boardTiles[row][col], _boardTiles[row - 1][col]);
-      row--;
+  void mergeUp(int r, int col) {
+    while (r > 0) {
+      merge(_boardTiles[r][col], _boardTiles[r - 1][col]);
+      r--;
     }
   }
 
-  void margeDown(int r, int col) {
+  void mergeDown(int r, int col) {
     while (r < row - 1) {
-      marge(_boardTiles[r][col], _boardTiles[r + 1][col]);
+      merge(_boardTiles[r][col], _boardTiles[r + 1][col]);
       r++;
     }
   }
 
-  bool canMarge(Tile a, Tile b) {
-    return !a.canMarge &&
+  bool canMerge(Tile a, Tile b) {
+    return !a.canMerge &&
         ((b.isEmpty() && !a.isEmpty()) || (!a.isEmpty() && a == b));
   }
 
-  void marge(Tile a, Tile b) {
-    if (!canMarge(a, b)) {
-      if (!a.isEmpty() && !b.canMarge) {
-        b.canMarge = true;
+  void merge(Tile a, Tile b) {
+    if (!canMerge(a, b)) {
+      if (!a.isEmpty() && !b.canMerge) {
+        b.canMerge = true;
       }
       return;
     }
+
     if (b.isEmpty()) {
       b.value = a.value;
       a.value = 0;
     } else if (a == b) {
       b.value = b.value * 2;
       a.value = 0;
-      b.canMarge = true;
+      score += b.value;
+      b.canMerge = true;
     } else {
-      b.canMarge = true;
+      b.canMerge = true;
     }
+  }
+
+  bool gameOver() {
+    return !canMoveLeft() && !canMoveRight() && !canMoveUp() && !canMoveDown();
   }
 
   Tile getTile(int row, int column) {
@@ -198,18 +206,17 @@ class Board {
     }
 
     Random rng = Random();
-    for (int i = 0; i < 4; i++) {
-      int index = rng.nextInt(empty.length);
-      empty[index].value = rng.nextInt(9) == 0 ? 4 : 2;
-      empty[index].isNew = true;
-      empty.removeAt(index);
-    }
+
+    int index = rng.nextInt(empty.length);
+    empty[index].value = rng.nextInt(9) == 0 ? 4 : 2;
+    empty[index].isNew = true;
+    empty.removeAt(index);
   }
 
-  void resetCanMarge() {
+  void resetCanMerge() {
     _boardTiles.forEach((rows) {
       rows.forEach((tile) {
-        tile.canMarge = false;
+        tile.canMerge = false;
       });
     });
   }
@@ -218,14 +225,14 @@ class Board {
 class Tile {
   int row, column;
   int value;
-  bool canMarge;
+  bool canMerge;
   bool isNew;
 
   Tile({
     this.row,
     this.column,
     this.value = 0,
-    this.canMarge,
+    this.canMerge,
     this.isNew,
   });
 
